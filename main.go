@@ -15,7 +15,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/pflag"
 )
 
@@ -35,15 +34,6 @@ func init() {
 	pflag.BoolVarP(&outputJSON, "json", "j", false, "Output in JSON format")
 	pflag.Parse()
 }
-
-var bar = progressbar.NewOptions64(
-	-1,
-	progressbar.OptionSetDescription("Scanning"),
-	progressbar.OptionShowBytes(true),
-	progressbar.OptionClearOnFinish(),
-	progressbar.OptionShowCount(),
-	progressbar.OptionThrottle(65000000),
-)
 
 func getHash(b io.Reader, algorithm string) string {
 	var hash hash.Hash
@@ -69,7 +59,7 @@ func getHash(b io.Reader, algorithm string) string {
 		log.Fatalln("Invalid algorithm")
 	}
 
-	if _, err := io.Copy(io.MultiWriter(hash, bar), b); err != nil {
+	if _, err := io.Copy(hash, b); err != nil {
 		log.Fatal(err)
 	}
 
@@ -83,26 +73,34 @@ func main() {
 		log.Fatalln("Can't use empty string")
 	}
 
-	var reader io.Reader
-	if file != "" {
-		f, err := os.Open(file)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		defer f.Close()
-		reader = f
-	} else {
-		reader = strings.NewReader(text)
-	}
-
 	for _, algorithm := range algorithms {
-		results[algorithm] = getHash(reader, algorithm)
-		if upperCase {
-			results[algorithm] = strings.ToUpper(results[algorithm])
-		}
-	}
+		var reader io.Reader
+		var err error
 
-	bar.Clear()
+		if file != "" {
+			var f *os.File
+			f, err = os.Open(file)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			defer f.Close()
+			// Seek to the beginning of the file for each algorithm
+			_, err = f.Seek(0, io.SeekStart)
+			if err != nil {
+				log.Fatalln("Error seeking file:", err)
+			}
+			reader = f
+		} else {
+			// Reinitialize the reader for each algorithm
+			reader = strings.NewReader(text)
+		}
+
+		hashResult := getHash(reader, algorithm)
+		if upperCase {
+			hashResult = strings.ToUpper(hashResult)
+		}
+		results[algorithm] = hashResult
+	}
 
 	if outputJSON {
 		jsonOutput, err := json.MarshalIndent(results, "", "  ")
