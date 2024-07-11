@@ -16,6 +16,9 @@ import (
 	"strings"
 
 	"github.com/spf13/pflag"
+	"github.com/zeebo/blake3"
+	"golang.org/x/crypto/blake2b"
+	"golang.org/x/crypto/blake2s"
 )
 
 var (
@@ -30,7 +33,7 @@ func init() {
 	pflag.StringVarP(&text, "text", "t", "", "Input text")
 	pflag.StringVarP(&file, "file", "f", "", "Input file")
 	pflag.BoolVarP(&upperCase, "upper-case", "u", false, "Upper case output")
-	pflag.StringSliceVarP(&algorithms, "algorithm", "a", []string{"sha256"}, "Hash algorithms: crc32, crc64, md4, md5, sha1, sha224, sha256, sha384, sha512")
+	pflag.StringSliceVarP(&algorithms, "algorithm", "a", []string{"sha256"}, "Hash algorithms: crc32, crc64, md4, md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s, blake3")
 	pflag.BoolVarP(&outputJSON, "json", "j", false, "Output in JSON format")
 	pflag.Parse()
 }
@@ -55,6 +58,12 @@ func getHash(b io.Reader, algorithm string) string {
 		hash = sha512.New384()
 	case "sha512":
 		hash = sha512.New()
+	case "blake2b":
+		hash, _ = blake2b.New256(nil)
+	case "blake2s":
+		hash, _ = blake2s.New256(nil)
+	case "blake3":
+		hash = blake3.New()
 	default:
 		log.Fatalln("Invalid algorithm")
 	}
