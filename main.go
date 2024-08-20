@@ -33,7 +33,7 @@ func init() {
 	pflag.StringVarP(&text, "text", "t", "", "Input text")
 	pflag.StringVarP(&file, "file", "f", "", "Input file")
 	pflag.BoolVarP(&upperCase, "upper-case", "u", false, "Upper case output")
-	pflag.StringSliceVarP(&algorithms, "algorithm", "a", []string{"sha256"}, "Hash algorithms: crc32, crc64, md4, md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s, blake3")
+	pflag.StringSliceVarP(&algorithms, "algorithm", "a", []string{"sha256"}, "Hash algorithms: crc32, crc64, md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s, blake3")
 	pflag.BoolVarP(&outputJSON, "json", "j", false, "Output in JSON format")
 	pflag.Parse()
 }
